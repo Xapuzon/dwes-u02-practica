@@ -66,24 +66,45 @@ $tituloPagina = 'Blackjack';
 require __DIR__ . '/includes/header.inc.php';
 require __DIR__ . '/includes/menu.inc.php';
 ?>
-    <main>
-        <h2>Blackjack</h2>
+    <main class="contenedor">
+        <h2 class="titulo-mesa">Mesa de Blackjack</h2>
 
-        <section class="participante">
-            <h3>Banca</h3>
-            <?= mostrarMano($manos[0]) ?>
-            <p>Puntuación: <?= $puntosBanca ?></p>
-        </section>
-
-        <?php for ($jugador = 1; $jugador <= 5; $jugador++) { ?>
-            <?php $puntosJugador = calcularPuntuacion($manos[$jugador]); ?>
-            <section class="participante">
-                <h3>Jugador <?= $jugador ?></h3>
-                <?= mostrarMano($manos[$jugador]) ?>
-                <p>Puntuación: <?= $puntosJugador ?></p>
-                <p><strong><?= resultadoContraBanca($puntosJugador, $puntosBanca) ?></strong></p>
+        <div class="mesa">
+            <section class="banca">
+                <h3>Banca</h3>
+                <div class="mano">
+                    <?= mostrarMano($manos[0]) ?>
+                </div>
+                <p class="puntos">
+                    <?= $puntosBanca ?>
+                    <?= $puntosBanca > 21 ? '<span class="se-pasa">se pasa</span>' : '' ?>
+                </p>
             </section>
-        <?php } ?>
+
+            <div class="asientos">
+                <?php for ($jugador = 1; $jugador <= 5; $jugador++) { ?>
+                    <?php
+                    $puntosJugador = calcularPuntuacion($manos[$jugador]);
+                    $resultado = resultadoContraBanca($puntosJugador, $puntosBanca);
+                    ?>
+                    <section class="participante">
+                        <h3>Jugador <?= $jugador ?></h3>
+                        <div class="mano">
+                            <?= mostrarMano($manos[$jugador]) ?>
+                        </div>
+                        <p class="puntos">
+                            <?= $puntosJugador ?>
+                            <?= $puntosJugador > 21 ? '<span class="se-pasa">se pasa</span>' : '' ?>
+                        </p>
+                        <p class="resultado <?= strtolower($resultado) ?>"><?= $resultado ?></p>
+                    </section>
+                <?php } ?>
+            </div>
+        </div>
+
+        <p class="accion">
+            <a class="boton" href="blackjackXapuzon.php">Repartir de nuevo</a>
+        </p>
     </main>
 
 <?php
