@@ -2,95 +2,84 @@
 require __DIR__ . '/getdeck.php';
 require __DIR__ . '/includes/funciones.inc.php';
 
-function enfrentar(array $cartaUno, array $cartaDos): array
-{
-    $comodinUno = $cartaUno['palo'] === 'comodin';
-    $comodinDos = $cartaDos['palo'] === 'comodin';
-
-    if ($comodinUno && $comodinDos) {
-        return ['puntosUno' => -2, 'puntosDos' => -2, 'texto' => 'Ambos tienen comodín'];
-    }
-
-    if ($comodinUno) {
-        return ['puntosUno' => 2, 'puntosDos' => -1, 'texto' => 'Comodín del jugador 1'];
-    }
-
-    if ($comodinDos) {
-        return ['puntosUno' => -1, 'puntosDos' => 2, 'texto' => 'Comodín del jugador 2'];
-    }
-
-    if ($cartaUno['valor'] === $cartaDos['valor']) {
-        return ['puntosUno' => 1, 'puntosDos' => 1, 'texto' => 'Empate'];
-    }
-
-    if ($cartaUno['valor'] > $cartaDos['valor']) {
-        return ['puntosUno' => 2, 'puntosDos' => 0, 'texto' => 'Gana el jugador 1'];
-    }
-
-    return ['puntosUno' => 0, 'puntosDos' => 2, 'texto' => 'Gana el jugador 2'];
-}
-
 $baraja = obtenerBaraja();
 shuffle($baraja);
 
-$manos = repartir($baraja, 2, 10);
+$manos = [[], []];
 
-$resultados = [];
-$totalUno = 0;
-$totalDos = 0;
-
-for ($indice = 0; $indice < 10; $indice++) {
-    $resultado = enfrentar($manos[0][$indice], $manos[1][$indice]);
-    $resultados[] = $resultado;
-    $totalUno += $resultado['puntosUno'];
-    $totalDos += $resultado['puntosDos'];
+for ($ronda = 0; $ronda < 10; $ronda++) {
+    $manos[0][] = array_pop($baraja);
+    $manos[1][] = array_pop($baraja);
 }
 
-if ($totalUno > $totalDos) {
-    $mensajeFinal = 'Gana el jugador 1';
-} elseif ($totalDos > $totalUno) {
-    $mensajeFinal = 'Gana el jugador 2';
-} else {
-    $mensajeFinal = 'Empate';
-}
+$puntosJugador1 = 0;
+$puntosJugador2 = 0;
 
 $tituloPagina = 'Higher';
 
 require __DIR__ . '/includes/header.inc.php';
 require __DIR__ . '/includes/menu.inc.php';
 ?>
-    <main>
-        <h2>Higher</h2>
+    <main class="contenedor">
+        <h2 class="titulo-mesa">Higher</h2>
 
         <table border="1">
-            <thead>
+            <tr>
+                <th>Ronda</th>
+                <th>Jugador 1</th>
+                <th>Jugador 2</th>
+                <th>Resultado</th>
+            </tr>
+            <?php for ($ronda = 0; $ronda < 10; $ronda++) {
+                $carta1 = $manos[0][$ronda];
+                $carta2 = $manos[1][$ronda];
+
+                if ($carta1['palo'] === 'comodin' && $carta2['palo'] === 'comodin') {
+                    $puntosJugador1 -= 2;
+                    $puntosJugador2 -= 2;
+                    $resultado = 'Los dos tienen comodín';
+                } elseif ($carta1['palo'] === 'comodin') {
+                    $puntosJugador1 += 2;
+                    $puntosJugador2 -= 1;
+                    $resultado = 'Comodín del jugador 1';
+                } elseif ($carta2['palo'] === 'comodin') {
+                    $puntosJugador1 -= 1;
+                    $puntosJugador2 += 2;
+                    $resultado = 'Comodín del jugador 2';
+                } elseif ($carta1['valor'] === $carta2['valor']) {
+                    $puntosJugador1 += 1;
+                    $puntosJugador2 += 1;
+                    $resultado = 'Empate';
+                } elseif ($carta1['valor'] > $carta2['valor']) {
+                    $puntosJugador1 += 2;
+                    $resultado = 'Gana el jugador 1';
+                } else {
+                    $puntosJugador2 += 2;
+                    $resultado = 'Gana el jugador 2';
+                }
+            ?>
                 <tr>
-                    <th>Ronda</th>
-                    <th>Jugador 1</th>
-                    <th>Jugador 2</th>
-                    <th>Resultado</th>
-                    <th>Puntos J1</th>
-                    <th>Puntos J2</th>
+                    <td><?= $ronda + 1 ?></td>
+                    <td><?= mostrarCarta($carta1) ?></td>
+                    <td><?= mostrarCarta($carta2) ?></td>
+                    <td><?= $resultado ?></td>
                 </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($resultados as $indice => $resultado) { ?>
-                    <tr>
-                        <td><?= $indice + 1 ?></td>
-                        <td><?= mostrarCarta($manos[0][$indice]) ?></td>
-                        <td><?= mostrarCarta($manos[1][$indice]) ?></td>
-                        <td><?= $resultado['texto'] ?></td>
-                        <td><?= $resultado['puntosUno'] ?></td>
-                        <td><?= $resultado['puntosDos'] ?></td>
-                    </tr>
-                <?php } ?>
-            </tbody>
+            <?php } ?>
         </table>
 
         <h3>Puntuación total</h3>
-        <p>Jugador 1: <?= $totalUno ?></p>
-        <p>Jugador 2: <?= $totalDos ?></p>
-        <h3><?= $mensajeFinal ?></h3>
+        <p>Jugador 1: <?= $puntosJugador1 ?></p>
+        <p>Jugador 2: <?= $puntosJugador2 ?></p>
+
+        <?php
+        if ($puntosJugador1 > $puntosJugador2) {
+            echo '<h3>Gana el jugador 1</h3>';
+        } elseif ($puntosJugador2 > $puntosJugador1) {
+            echo '<h3>Gana el jugador 2</h3>';
+        } else {
+            echo '<h3>Empate</h3>';
+        }
+        ?>
     </main>
 
 <?php

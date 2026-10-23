@@ -24,7 +24,7 @@ require __DIR__ . '/includes/menu.inc.php';
         </section>
 
         <section class="autor">
-            <img class="avatar" src="img/asa.jpg" alt="Avatar de Xapuzon">
+            <img class="avatar" src="img/avatar.png" alt="Avatar de Xapuzon">
             <p>Autor: <strong>Xapuzon</strong></p>
         </section>
     </main>

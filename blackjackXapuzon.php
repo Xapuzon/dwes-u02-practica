@@ -1,61 +1,24 @@
 <?php
 require __DIR__ . '/getdeck.php';
 require __DIR__ . '/includes/funciones.inc.php';
-
-function calcularPuntuacion(array $mano): int
-{
-    $puntos = 0;
-    $ases = 0;
-
-    foreach ($mano as $carta) {
-        if ($carta['valor'] === 1) {
-            $ases++;
-            $puntos += 1;
-        } else {
-            $puntos += $carta['valor'] > 10 ? 10 : $carta['valor'];
-        }
-    }
-
-    for ($indice = 0; $indice < $ases; $indice++) {
-        if ($puntos + 10 <= 21) {
-            $puntos += 10;
-        }
-    }
-
-    return $puntos;
-}
-
-function resultadoContraBanca(int $puntosJugador, int $puntosBanca): string
-{
-    if ($puntosJugador > 21) {
-        return 'PIERDE';
-    }
-
-    if ($puntosBanca > 21) {
-        return 'GANA';
-    }
-
-    if ($puntosJugador > $puntosBanca) {
-        return 'GANA';
-    }
-
-    if ($puntosJugador < $puntosBanca) {
-        return 'PIERDE';
-    }
-
-    return 'EMPATA';
-}
+    
 
 $baraja = obtenerBaraja();
 array_pop($baraja);
 array_pop($baraja);
 shuffle($baraja);
 
-$manos = repartir($baraja, 6, 2);
+$manos = [[], [], [], [], [], []];
 
-foreach ($manos as $indice => $mano) {
-    while (calcularPuntuacion($manos[$indice]) < 14) {
-        $manos[$indice][] = array_pop($baraja);
+for ($ronda = 0; $ronda < 2; $ronda++) {
+    for ($participante = 0; $participante < 6; $participante++) {
+        $manos[$participante][] = array_pop($baraja);
+    }
+}
+
+for ($participante = 0; $participante < 6; $participante++) {
+    while (calcularPuntuacion($manos[$participante]) < 14) {
+        $manos[$participante][] = array_pop($baraja);
     }
 }
 
@@ -77,16 +40,28 @@ require __DIR__ . '/includes/menu.inc.php';
                 </div>
                 <p class="puntos">
                     <?= $puntosBanca ?>
-                    <?= $puntosBanca > 21 ? '<span class="se-pasa">se pasa</span>' : '' ?>
+                    <?php if ($puntosBanca > 21) { ?>
+                        <span class="se-pasa">se pasa</span>
+                    <?php } ?>
                 </p>
             </section>
 
             <div class="asientos">
-                <?php for ($jugador = 1; $jugador <= 5; $jugador++) { ?>
-                    <?php
+                <?php for ($jugador = 1; $jugador <= 5; $jugador++) {
                     $puntosJugador = calcularPuntuacion($manos[$jugador]);
-                    $resultado = resultadoContraBanca($puntosJugador, $puntosBanca);
-                    ?>
+
+                    if ($puntosJugador > 21) {
+                        $resultado = 'PIERDE';
+                    } elseif ($puntosBanca > 21) {
+                        $resultado = 'GANA';
+                    } elseif ($puntosJugador > $puntosBanca) {
+                        $resultado = 'GANA';
+                    } elseif ($puntosJugador < $puntosBanca) {
+                        $resultado = 'PIERDE';
+                    } else {
+                        $resultado = 'EMPATA';
+                    }
+                ?>
                     <section class="participante">
                         <h3>Jugador <?= $jugador ?></h3>
                         <div class="mano">
@@ -94,7 +69,9 @@ require __DIR__ . '/includes/menu.inc.php';
                         </div>
                         <p class="puntos">
                             <?= $puntosJugador ?>
-                            <?= $puntosJugador > 21 ? '<span class="se-pasa">se pasa</span>' : '' ?>
+                            <?php if ($puntosJugador > 21) { ?>
+                                <span class="se-pasa">se pasa</span>
+                            <?php } ?>
                         </p>
                         <p class="resultado <?= strtolower($resultado) ?>"><?= $resultado ?></p>
                     </section>
